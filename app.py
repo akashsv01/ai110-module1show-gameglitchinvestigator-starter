@@ -1,7 +1,25 @@
 import random
 import streamlit as st
+import pandas as pd
 
-# helpers were refactored out of app.py into logic_utils.py
+# ENHANCEMENT: Helper to determine "hotness" for visual feedback
+def get_hotness_emoji(guess, secret, low, high):
+    """Return emoji and color based on how close the guess is to the secret."""
+    distance = abs(guess - secret)
+    range_size = high - low
+    
+    if distance == 0:
+        return "🔥🔥🔥 BULL'S EYE!", "green"
+    elif distance <= range_size * 0.1:
+        return "🔥🔥 Scalding!", "orange"
+    elif distance <= range_size * 0.25:
+        return "🔥 Hot!", "red"
+    elif distance <= range_size * 0.5:
+        return "🌅 Warm", "blue"
+    else:
+        return "❄️ Cold", "light-blue"
+
+# Import logic helpers
 # FIX: Refactored logic into logic_utils.py using Copilot Agent mode
 from logic_utils import (
     get_range_for_difficulty,
@@ -9,8 +27,6 @@ from logic_utils import (
     check_guess,
     update_score,
 )
-
-st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
 st.title("🎮 Game Glitch Investigator")
 st.caption("An AI-generated guessing game. Something is off.")
@@ -131,6 +147,10 @@ if submit:
 
         outcome, message = check_guess(guess_int, secret)
 
+        # ENHANCEMENT: Show hot/cold feedback
+        hotness_emoji, hotness_color = get_hotness_emoji(guess_int, st.session_state.secret, low, high)
+        st.markdown(f":{hotness_color}[**{hotness_emoji}**]")
+
         if show_hint:
             st.warning(message)
 
@@ -139,6 +159,10 @@ if submit:
             outcome=outcome,
             attempt_number=st.session_state.attempts,
         )
+
+        # ENHANCEMENT: Show attempts progress bar
+        progress = st.session_state.attempts / attempt_limit
+        st.progress(progress, text=f"Attempts: {st.session_state.attempts}/{attempt_limit}")
 
         if outcome == "Win":
             st.balloons()
@@ -155,6 +179,22 @@ if submit:
                     f"The secret was {st.session_state.secret}. "
                     f"Score: {st.session_state.score}"
                 )
+
+# ENHANCEMENT: Display game session history as a table
+if len(st.session_state.history) > 0:
+    st.subheader("📊 Session History")
+    history_data = []
+    for i, guess in enumerate(st.session_state.history, 1):
+        if isinstance(guess, int):
+            distance = abs(guess - st.session_state.secret)
+            direction = "🎯 Win" if distance == 0 else ("🔽 Too Low" if guess < st.session_state.secret else "🔼 Too High")
+            history_data.append({"Attempt": i, "Guess": guess, "Outcome": direction})
+        else:
+            history_data.append({"Attempt": i, "Guess": guess, "Outcome": "❌ Invalid"})
+    
+    if history_data:
+        df = pd.DataFrame(history_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
 st.divider()
 st.caption("Built by an AI that claims this code is production-ready.")
