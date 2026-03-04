@@ -4,26 +4,30 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 1. What was broken when you started?
 
-- What did the game look like the first time you ran it?
-- List at least two concrete bugs you noticed at the start  
-  (for example: "the secret number kept changing" or "the hints were backwards").
+- The game was giving completely backwards hints.  If the secret was 100 and I guessed 50 it would tell me to go "LOWER" instead of "HIGHER", and vice‑versa.
+- Once I either won or ran out of tries the "New Game" button stopped working; the session state never got cleared so I had to reload the page to play again.
+- The attempt counter was lying.  The banner might say "Attempts left: 1" and the very next message would be "Out of attempts!" because the info line was using an old value of the counter.
+- Difficulty didn’t actually change anything.  The sidebar correctly said 1–50 for Hard, but the top prompt still said 1–100 and new secrets were always drawn from 1–100 no matter what difficulty I picked.
 
 ---
 
 ## 2. How did you use AI as a teammate?
 
-- Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
-- Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
-- Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
+- **Tools used:** I relied mainly on GitHub Copilot in Agent mode to help refactor and suggest fixes, along with some ChatGPT-style ideas when reasoning about session state.  Copilot generated most of the helper functions and the form layout.
+
+- **Correct suggestion example:** Copilot pointed out that the `submit` button and text input could be wrapped in an `st.form` so the user could press Enter to submit.  The generated code snippet included `with st.form(...)` and Copilot even added a comment about `st.form_submit_button`.  After inserting the suggested form and manually testing the app, the guess count decremented on the very first Enter press, confirming the fix worked exactly as described.
+
+- **Incorrect/misleading suggestion example:** Early on the assistant generated logic for `check_guess` that treated a guess higher than the secret by returning "📈 Go HIGHER!" – essentially reversing the hint.  That copy‑paste came straight from the buggy starter code.  I caught the mistake while reading the generated function and by running the unit tests, which failed until I corrected the message directions.  This showed that AI output is not automatically correct and needs verification.
 
 ---
 
 ## 3. Debugging and testing your fixes
 
-- How did you decide whether a bug was really fixed?
-- Describe at least one test you ran (manual or using pytest)  
-  and what it showed you about your code.
-- Did AI help you design or understand any tests? How?
+I treated a problem as fixed only after I could reproduce the original behaviour, apply a change, and then confirm the behaviour no longer occurred.  For logic issues I wrote small `pytest` functions that exercised the helpers directly.  For example, I wrote a regression test for `check_guess` asserting that guessing 60 against a secret of 50 returned the "Too High" outcome with a LOWER hint; the test failed before the fix and passed afterwards.  That gave me confidence the most obvious hint‑reversal bug was gone.
+
+To verify the session‑state problems I used manual play; after each change I started a game, triggered a win/loss, clicked New Game, and observed that the secret number, attempt count, and score were correctly reset.  The form‑submission tweak was also checked by using the Enter key and watching the attempts decrement immediately.
+
+AI helped indirectly by suggesting code structure that made testing easier (for instance refactoring routines into the `logic_utils` module so they could be imported from a plain test file).  It also suggested example inputs when I was writing assertions, but I still reviewed every generated test to ensure it matched the bug description.
 
 ---
 
