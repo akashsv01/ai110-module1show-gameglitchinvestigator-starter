@@ -33,15 +33,18 @@ AI helped indirectly by suggesting code structure that made testing easier (for 
 
 ## 4. What did you learn about Streamlit and state?
 
-- In your own words, explain why the secret number kept changing in the original app.
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
-- What change did you make that finally gave the game a stable secret number?
+The secret number kept changing because Streamlit reruns the entire script from top to bottom whenever a user interacts with any widget.  The original code was regenerating the secret by calling `random.randint()` on every rerun instead of storing it safely in `st.session_state`.  So every time I clicked a button or typed a guess, the script would restart and execute `st.session_state.secret = random.randint(low, high)` again, giving me a new target.
+
+I'd explain Streamlit reruns and session state like this: think of a Streamlit app as a recipe that gets re-cooked from the beginning every time someone flips a switch (clicks a button, types in a box, etc.). Without session state, ingredients reset each time you cook—so you'd never be able to keep track of anything between flips. Session state is like a notepad that survives the re-cooking; you can write your important values (like the secret number) on it, and they'll still be there the next time the recipe runs.
+
+The breakthrough fix was wrapping the initial secret-number generation in an `if "secret" not in st.session_state:` guard, so the secret only gets created once on the very first load, then persists across reruns.  I also added a secondary check for when the user switched difficulties, explicitly clearing and regenerating the secret for the new range.  This two-part approach gave the game a genuinely stable secret that only changed when the player wanted it to (on "New Game" or difficulty change).
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+One habit I'm keeping from this project is writing small, focused tests *while fixing*, not after.  Instead of trying to fix everything and then writing tests at the end, I'd write a test that captured the buggy behaviour, watch it fail, apply a fix, and confirm the test passed.  That immediate feedback loop kept me from going in circles and gave me proof each fix actually worked.  I'll do this in future labs by starting with a failing pytest case that documents the expected behaviour, then building the fix around it.
+
+One thing I'd do differently: next time I work with AI I'll be more aggressive about asking for *reasoning* before accepting generated code.  A couple times Copilot suggested fixes that sounded right but were actually copies of the buggy starter code.  If I'd asked "why does this comparison work?" I might have caught the reversed logic sooner instead of finding it later in testing.  The AI can explain its thinking, and I should demand that before copy-pasting.
+
+This project taught me that AI-generated code is a starting point, not a finish line.  The AI wrote functions that *looked* correct and had nice docstrings, but they still had bugs inherited from the source material.  I'm no longer worried about using AI to draft code quickly; I'm just much more skeptical of it, knowing I have to read it carefully, test it thoroughly, and push back when something doesn't make sense.  The AI was genuinely useful for refactoring and structure, but it wasn't a substitute for understanding the code myself.
