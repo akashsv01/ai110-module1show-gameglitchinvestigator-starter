@@ -46,7 +46,7 @@ Four critical bugs were identified:
 ## 📸 Demo
 
 - [ ] ![winning Game Screenshot](image.png)
-- [ ] ![Updated Gameplay](image-1.png)
+
 ## 🚀 Stretch Features
 
-- [ ] [If you choose to complete Challenge 4, insert a screenshot of your Enhanced Game UI here]
+- [ ] ![Updated Gameplay](image-1.png)
